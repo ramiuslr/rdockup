@@ -28,42 +28,24 @@ fn extract_version(tag: &str) -> Option<Version> {
     None
 }
 
+/// Filter a tag list using exclude and include parameters
 fn tag_matches_filters(tag: &str, include: Option<&[String]>, exclude: Option<&[String]>) -> bool {
     let includes = include.map_or(true, |incs| incs.iter().all(|inc| tag.contains(inc)));
     let excludes = exclude.map_or(true, |excs| excs.iter().all(|exc| !tag.contains(exc)));
     includes && excludes
 }
 
+/// Retrieve all tags using the list_tags method on the Client object
 async fn fetch_all_tags(
     client: &Client,
     image_ref: &Reference,
     auth: &RegistryAuth,
 ) -> Result<Vec<String>, Box<dyn Error>> {
-    let mut all_tags = Vec::new();
-    let mut last_tag: Option<String> = None;
-
-    loop {
-        let response = client
-            .list_tags(image_ref, auth, Some(100), last_tag.as_deref())
-            .await?;
-
-        let tags = response.tags;
-        if tags.is_empty() {
-            break;
-        }
-
-        let is_last_page = tags.len() < 100;
-        last_tag = tags.last().cloned();
-        all_tags.extend(tags);
-
-        if is_last_page {
-            break;
-        }
-    }
-
-    Ok(all_tags)
+    let response = client.list_tags(image_ref, auth, Some(1000), None).await?;
+    Ok(response.tags)
 }
 
+/// The core function that make all other functions working together
 async fn get_sorted_tags(
     image: &str,
     include: Option<&[String]>,
@@ -90,6 +72,7 @@ async fn get_sorted_tags(
         .collect())
 }
 
+/// The public entrypoint that outputs results as JSON
 pub async fn get_tags(
     image: &str,
     include: Option<&[String]>,
