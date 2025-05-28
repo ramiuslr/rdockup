@@ -1,0 +1,52 @@
+#!/bin/env python
+
+import sys
+import logging
+import yaml
+from requests import Session
+
+
+# Global variables
+base_url = "http://127.0.0.1:3000/api"
+
+
+def get_events(s, image):
+    data = {
+        "image": image,
+    }
+    try:
+        r = s.post(base_url + "/tags", json=data)
+        return r.text
+    except Exception as e:
+        logging.error(e)
+        sys.exit(1)
+
+
+def main():
+    # Initialize logging
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(levelname)s - %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",  # Explicit date format
+    )
+
+    # Import config from file
+    with open("./config.yaml", "r", encoding="utf8") as file:
+        config = yaml.safe_load(file)
+    token = config["token"]
+
+    # Read command line argument
+    image = sys.argv[1]
+
+    s = Session()
+    s.headers.update(
+        {
+            'Authorization': f"Bearer {token}",
+            'Content-type': 'application/json'
+        }
+    )
+
+    print(get_events(s, image))
+
+if __name__ == "__main__":
+    main()

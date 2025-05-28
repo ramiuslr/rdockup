@@ -19,7 +19,7 @@ fn validate_token(token: &str) -> bool {
 }
 
 pub fn create_router() -> Router {
-    Router::new().route("/tags", post(get_tags_handler))
+    Router::new().route("/api/tags", post(get_tags_handler))
 }
 
 async fn get_tags_handler(
