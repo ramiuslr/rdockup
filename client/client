@@ -1,8 +1,10 @@
 #!/bin/env python
 
 import sys
+import json
 import logging
 import yaml
+import argparse
 from requests import Session
 
 
@@ -10,9 +12,11 @@ from requests import Session
 base_url = "http://127.0.0.1:3000/api"
 
 
-def get_events(s, image):
+def get_events(s, image, include, exclude):
     data = {
         "image": image,
+        "include": include if include is not None else [],
+        "exclude": exclude if exclude is not None else [],
     }
     try:
         r = s.post(base_url + "/tags", json=data)
@@ -30,13 +34,25 @@ def main():
         datefmt="%Y-%m-%d %H:%M:%S",  # Explicit date format
     )
 
+    # Initialize parser
+    parser = argparse.ArgumentParser(
+        prog='rdockup-client',
+        description='Perform requests against rdockup REST API',
+    )
+    parser.add_argument('-I', '--image', required=True)
+    parser.add_argument('-i', '--include', nargs='+')
+    parser.add_argument('-e', '--exclude', nargs='+')
+    args = parser.parse_args()
+
     # Import config from file
     with open("./config.yaml", "r", encoding="utf8") as file:
         config = yaml.safe_load(file)
     token = config["token"]
 
     # Read command line argument
-    image = sys.argv[1]
+    image = args.image
+    include = args.include
+    exclude = args.exclude
 
     s = Session()
     s.headers.update(
@@ -46,7 +62,11 @@ def main():
         }
     )
 
-    print(get_events(s, image))
+    result = get_events(s, image, include, exclude)
+    try:
+        print(json.dumps(json.loads(result), indent=2))
+    except Exception:
+        print(result)
 
 if __name__ == "__main__":
     main()

@@ -12,6 +12,8 @@ use crate::registry_client;
 #[derive(Deserialize)]
 struct TagRequest {
     image: String,
+    include: Option<Vec<String>>,
+    exclude: Option<Vec<String>>,
 }
 
 fn validate_token(token: &str) -> bool {
@@ -41,7 +43,13 @@ async fn get_tags_handler(
         );
     }
 
-    match registry_client::get_tags(&payload.image).await {
+    match registry_client::get_tags(
+        &payload.image,
+        payload.include.as_deref(),
+        payload.exclude.as_deref(),
+    )
+    .await
+    {
         Ok(json) => (StatusCode::OK, [("content-type", "application/json")], json),
         Err(e) => (
             StatusCode::BAD_REQUEST,
