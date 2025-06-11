@@ -1,0 +1,9 @@
+---
+services:
+  rdockup:
+    build: .
+    container_name: rdockup
+    restart: always
+    ports:
+      - 3000:3000
+...

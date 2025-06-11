@@ -1,12 +1,19 @@
 mod api;
 mod registry_client;
 
+use ctrlc;
 use tower_http::trace::{self, TraceLayer};
 use tracing::{Level, info};
-// use tracing_subscriber::EnvFilter;
 
 #[tokio::main]
 async fn main() {
+    // Handle termination signal
+    ctrlc::set_handler(|| {
+        println!("Received termination signal. Shutting down gracefully...");
+        std::process::exit(0);
+    })
+    .expect("Error setting Ctrl-C handler");
+
     // Initialize logging for access logs
     tracing_subscriber::fmt()
         // .with_env_filter(
